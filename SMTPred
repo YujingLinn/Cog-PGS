@@ -1,0 +1,37 @@
+# create polygenic g score using SMTPred
+
+git clone https://github.com/uqrmaie1/smtpred.git
+
+conda activate myenv
+
+# 1. calculate IQ3 and EA4 PGS using LDpred2
+# 2. obtain the auto scores, change the column names to FID, IID, SCORE, the rest of them can remain unchanged & also change the file suffix to .profile 
+cd /scratch/users/k21170717/SMTpred/
+
+# Create a properly formatted PLINK score file
+awk 'BEGIN {OFS="\t"} 
+NR==1 {printf "    FID    IID  PHENO     CNT    CNT2     SCORE    \n"} 
+NR>1 {printf "%7s %7s %6s %7s %7s %12s\n", $1, $2, "-9", "1000000", "2000000", $7}' \
+cog_meta_sumstats_noTEDS_fromAndy_ldpred2_pred_auto.txt > IQ3.profile
+# CNT and CNT2 are specific outputs from plink and not used at all for SMTpred; however, the python script asks specifically for this formatting--I could change the script to go around this, but let's just go with the script and change our data format 
+
+awk 'BEGIN {OFS="\t"} 
+NR==1 {printf "    FID    IID  PHENO     CNT    CNT2     SCORE    \n"} 
+NR>1 {printf "%7s %7s %6s %7s %7s %12s\n", $1, $2, "-9", "1000000", "2000000", $7}' \
+EA4_no23andme_effN_allsnp_Okbay2022_ldpred2_pred_auto.txt > EA4.profile
+
+# 3. use ldsc from the GenomicSEM package to calculate h2, rG, n
+# 4. run the codes below:
+cd ../
+
+python smtpred.py \
+  --h2file PGg_290825/ldsc_h2s.txt \
+  --rgfile PGg_290825/ldsc_rgs.txt \
+  --nfile PGg_290825/ldsc_ns.txt \
+  --scorefiles PGg_290825/EA4.profile \
+               PGg_290825/IQ3.profile \
+  --out PGg_290825/PGIQ \
+  --alltraits
+
+# 5. the output
+PGIQ.log

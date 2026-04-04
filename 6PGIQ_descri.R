@@ -1,11 +1,4 @@
-# title: "Descriptive Statistics and Sensitivity Analyses"
-# author: "Yujing"
-# date: "October 15, 2025"
-
-# sensitivity analyses: age, sex, birth order, chiptype, PCs, zygosity
-# whole sample descriptives of phenotypes: mean, SD, N, age(SD), min, max, skewness, kurtosis
-# females' and males' descriptives: mean, SD, N, age(SD), min, max, skewness, kurtosis
-# PGIQ_IQscale +3/-3SD descriptives: mean, SD, N, age(SD), min, max, skewness, kurtosis
+# Descriptive Statistics and Sensitivity Analyses
 
 library(dplyr)
 library(tibble)
@@ -14,27 +7,200 @@ library(tidyr)
 library(openxlsx)
 library(moments)
 
-# Source the variable lists
-source("/Users/yujinglin/Desktop/PGIQ Codes/0PGIQ_VarList.R")
+source("./PGIQ Codes/0PGIQ_VarList.R")
+source("./PGIQ Codes/0PGIQ_CommFactorList.R")
 
-# Set file paths
-sourceFileStem <- '/Users/yujinglin/Desktop/polygenic IQ score/Data220925/'
-outFileStem <- '/Users/yujinglin/Desktop/polygenic IQ score/Results220925/'
+sourceFileStem <- './Data/'
+outFileStem <- './Results/'
 
-# Load raw data
 raw_data <- read.csv(paste0(sourceFileStem, "PGIQ_raw.csv"))
 
-# select those with PGIQ available; otherwise, we may end up with more people than we have included in our analyses
-dat_raw <- raw_data %>%
-  filter(!is.na(PGIQ))
+dat_raw <- raw_data %>% filter(!is.na(PGgS))
+dat_raw_unrelated <- subset(dat_raw, selectunpaired == 1)
+
+dat_raw_unrelated <- dat_raw_unrelated %>%
+  mutate(
+    Savage_g_PGS_IQscale = scale(Savage_g_PGS) * 15 + 100,
+    Okbay_EA_PGS_IQscale = scale(Okbay_EA_PGS) * 15 + 100,
+    PGgS_IQscale = scale(PGgS) * 15 + 100
+  )
 
 # ==============================================================================
-# 1. DATA PREPARATION ####
+# 1. DATA PREPARATION
 # ==============================================================================
-cat("\n=== PREPARING DATA ===\n\n")
+all_phenotype_vars <- c(
+  sapply(G_Composites_Varlist, function(x) paste0(x[1], "1")),
+  sapply(Verbal_Tests_Varlist, function(x) paste0(x[1], "1")),
+  sapply(Nonverbal_Tests_Varlist, function(x) paste0(x[1], "1")),
+  sapply(Edu_Achieve_Attain_Varlist, function(x) paste0(x[1], "1")),
+  sapply(Anxiety_Varlist, function(x) paste0(x[1], "1")),
+  sapply(Conners_Varlist, function(x) paste0(x[1], "1")),
+  sapply(SDQ_Varlist, function(x) paste0(x[1], "1")),
+  sapply(Anthro_Varlist, function(x) paste0(x[1], "1")),
+  sapply(Wellbeing_Varlist, function(x) paste0(x[1], "1"))
+)
 
-CommonFactor_Score_Varlist <- list(
-  # -- Cognitive Composites --
+common_factor_vars <- sapply(CommonFactor_Score_Varlist, function(x) paste0(x[1], "1"))
+other_vars <- c("ases", "gses", "pses", "u1pses", "Savage_g_PGS_IQscale", "Okbay_EA_PGS_IQscale", "PGgS_IQscale")
+analysis_vars <- c(all_phenotype_vars, common_factor_vars, other_vars)
+analysis_vars <- analysis_vars[analysis_vars %in% names(dat_raw_unrelated)]
+
+# ==============================================================================
+# 2. CREATE METADATA LOOKUP TABLE
+# ==============================================================================
+master_varlist <- c(
+  G_Composites_Varlist, Verbal_Tests_Varlist, Nonverbal_Tests_Varlist,
+  Edu_Achieve_Attain_Varlist, Anxiety_Varlist, Conners_Varlist,
+  SDQ_Varlist, Anthro_Varlist, Wellbeing_Varlist, CommonFactor_Score_Varlist
+)
+
+metadata_df <- purrr::map_dfr(master_varlist, ~tibble(
+  Variable_Stem = .x[1], Trait_Name = .x[2], Age_Variable = .x[3], Rater = .x[4], Category = .x[5]
+))
+
+other_metadata <- tibble(
+  Variable_Stem = c("ases", "gses", "pses", "u1pses", "Savage_g_PGS_IQscale", "Okbay_EA_PGS_IQscale", "PGgS_IQscale"),
+  Trait_Name = c("SES (Birth)", "SES (Age 7)", "SES (Age 16)", "SES (Age 21)", "Savage g PGS (IQ scale)", "Okbay EA PGS (IQ scale)", "Polygenic g Score (IQ scale)"),
+  Age_Variable = NA_character_, Rater = c("Parent", "Parent", "Parent", "Child", "N/A", "N/A", "N/A"), Category = c("Socioeconomic Status", "Socioeconomic Status", "Socioeconomic Status", "Socioeconomic Status", "Polygenic Score", "Polygenic Score", "Polygenic Score")
+)
+
+master_metadata_df <- bind_rows(metadata_df, other_metadata) %>%
+  mutate(Variable = if_else(Category %in% c("Polygenic Score", "Socioeconomic Status"), Variable_Stem, paste0(Variable_Stem, "1"))) %>%
+  mutate(Var_Order = row_number()) %>% 
+  distinct(Variable, .keep_all = TRUE) %>% 
+  select(Variable, Trait_Name, Age_Variable, Rater, Category, Var_Order)
+
+# ==============================================================================
+# 3. DESCRIPTIVE STATISTICS FUNCTION
+# ==============================================================================
+calc_descriptives <- function(x) {
+  x_clean <- x[!is.na(x)]
+  if (length(x_clean) == 0) return(list(N = 0, Mean = NA, SD = NA, Min = NA, Max = NA, Skewness = NA, Kurtosis = NA))
+  list(
+    N = length(x_clean), Mean = mean(x_clean), SD = sd(x_clean), Min = min(x_clean), Max = max(x_clean),
+    Skewness = if(length(x_clean) > 2) skewness(x_clean) else NA, Kurtosis = if(length(x_clean) > 3) kurtosis(x_clean) else NA
+  )
+}
+
+# ==============================================================================
+# 4. SENSITIVITY ANALYSES (TABLE B1 FORMAT)
+# ==============================================================================
+run_regression <- function(data, outcome_var, predictor_var) {
+  if (!all(c(outcome_var, predictor_var) %in% names(data))) return(NULL)
+  clean_data <- data[!is.na(data[[outcome_var]]) & !is.na(data[[predictor_var]]), ]
+  if (nrow(clean_data) < 20) return(NULL)
+  tryCatch({
+    model <- lm(as.formula(paste(outcome_var, "~", predictor_var)), data = clean_data)
+    model_summary <- summary(model)
+    coef_table <- model_summary$coefficients
+    if (nrow(coef_table) > 1) {
+      coef_row <- coef_table[2, ]
+      return(tibble(Variable = outcome_var, Predictor = predictor_var, Beta = coef_row[1], SE = coef_row[2], t_value = coef_row[3], P_Value = coef_row[4], R_squared = model_summary$r.squared, N = nrow(clean_data)))
+    }
+  }, error = function(e) { return(NULL) })
+}
+
+predictors_list <- c("sex1", "twin", "zygos", "chiptype", paste0("PC", 1:10))
+sensitivity_results_list <- list()
+
+for (pred in predictors_list) {
+  if (!pred %in% names(dat_raw_unrelated)) next
+  pred_results <- purrr::map_dfr(analysis_vars, ~run_regression(dat_raw_unrelated, .x, pred))
+  if (nrow(pred_results) > 0) {
+    pred_results <- pred_results %>% mutate(P_adjusted_FDR = p.adjust(P_Value, method = "fdr")) %>% left_join(master_metadata_df, by = "Variable")
+    sensitivity_results_list[[pred]] <- pred_results
+  }
+}
+all_sensitivity_results <- bind_rows(sensitivity_results_list)
+
+age_sensitivity_list <- list()
+for (var in all_phenotype_vars) {
+  age_var <- master_metadata_df %>% filter(Variable == var) %>% pull(Age_Variable) %>% first()
+  if (!is.na(age_var) && age_var %in% names(dat_raw_unrelated)) {
+    result <- run_regression(dat_raw_unrelated, var, age_var)
+    if (!is.null(result)) {
+      result <- result %>% mutate(Predictor = "Age", P_adjusted_FDR = p.adjust(P_Value, method = "fdr")) %>% left_join(master_metadata_df, by = "Variable")
+      age_sensitivity_list[[var]] <- result
+    }
+  }
+}
+age_sensitivity_results <- bind_rows(age_sensitivity_list)
+
+table_B1_Sensitivity <- bind_rows(age_sensitivity_results, all_sensitivity_results) %>%
+  mutate(Predictor = factor(Predictor, levels = c("Age", predictors_list))) %>%
+  arrange(Predictor, Var_Order) %>%
+  select(`Sensitivity Variable` = Predictor, `Variable Category` = Category, `Variable Detail` = Trait_Name, Rater, Beta, SE, `R^2` = R_squared, `Adjusted P-Value` = P_adjusted_FDR)
+
+# ==============================================================================
+# 5. WHOLE & SUB SAMPLE DESCRIPTIVES (TABLE B2 FORMAT)
+# ==============================================================================
+create_desc_table <- function(data, vars = analysis_vars, metadata = master_metadata_df) {
+  if (nrow(data) == 0) return(tibble())   
+  tibble(Variable = vars) %>%
+    mutate(stats = map(Variable, ~calc_descriptives(data[[.x]]))) %>%
+    unnest_wider(stats) %>%
+    filter(N > 0) %>%
+    left_join(metadata, by = "Variable") %>%
+    mutate(
+      Age_Mean = map_dbl(Variable, ~{
+        age_var <- metadata %>% filter(Variable == .x) %>% pull(Age_Variable) %>% first()
+        if (!is.na(age_var) && age_var %in% names(data)) {
+          age_data <- data[[age_var]][!is.na(data[[age_var]])]
+          if (length(age_data) > 0) mean(age_data) else NA
+        } else { NA }
+      }),
+      Age_SD = map_dbl(Variable, ~{
+        age_var <- metadata %>% filter(Variable == .x) %>% pull(Age_Variable) %>% first()
+        if (!is.na(age_var) && age_var %in% names(data)) {
+          age_data <- data[[age_var]][!is.na(data[[age_var]])]
+          if (length(age_data) > 1) sd(age_data) else NA
+        } else { NA }
+      })
+    ) %>%
+    arrange(Var_Order) %>%
+    select(`Variable Category` = Category, `Variable Detail` = Trait_Name, Rater, N, `Age Mean` = Age_Mean, `Age SD` = Age_SD, Mean, SD, Min, Max, Skewness, Kurtosis)
+}
+
+whole_sample_desc <- create_desc_table(dat_raw_unrelated)
+female_desc       <- create_desc_table(dat_raw_unrelated %>% filter(sex1 == 0))
+male_desc         <- create_desc_table(dat_raw_unrelated %>% filter(sex1 == 1))
+mz_desc           <- create_desc_table(dat_raw_unrelated %>% filter(zygos == 1))
+dz_desc           <- create_desc_table(dat_raw_unrelated %>% filter(zygos == 2))
+
+high_pgiq <- dat_raw %>% filter(PGgEA_IQscale > 145)
+low_pgiq  <- dat_raw %>% filter(PGgEA_IQscale < 55)
+high_pgiq_desc <- create_desc_table(high_pgiq)
+low_pgiq_desc  <- create_desc_table(low_pgiq)
+
+# ==============================================================================
+# 6. T-TEST COMPARISON: HIGH vs. LOW PGIQ (TABLE B10 FORMAT)
+# ==============================================================================
+run_ttest <- function(high_data, low_data, outcome_var) {
+  vec_high <- high_data[[outcome_var]][!is.na(high_data[[outcome_var]])]
+  vec_low  <- low_data[[outcome_var]][!is.na(low_data[[outcome_var]])]
+  if (length(vec_high) < 2 || length(vec_low) < 2 || sd(vec_high) == 0 || sd(vec_low) == 0) return(NULL) 
+  tryCatch({
+    test_result <- t.test(vec_high, vec_low)
+    tibble(Variable = outcome_var, t_statistic = test_result$statistic, p_value = test_result$p.value, df = test_result$parameter, mean_high_PGgS = test_result$estimate[1], mean_low_PGgS = test_result$estimate[2], N_high_PGgS = length(vec_high), N_low_PGgS = length(vec_low))
+  }, error = function(e) { return(NULL) })
+}
+
+pgiq_comparison_results <- purrr::map_dfr(analysis_vars, ~run_ttest(high_pgiq, low_pgiq, .x))
+if (nrow(pgiq_comparison_results) > 0) {
+  table_B10_HighLow <- pgiq_comparison_results %>%
+    mutate(p_adjusted_FDR = p.adjust(p_value, method = "fdr")) %>%
+    left_join(master_metadata_df, by = "Variable") %>%
+    arrange(Var_Order) %>%
+    select(`Variable Category` = Category, `Variable Detail` = Trait_Name, Rater, `High Score N` = N_high_PGgS, `High Score Mean` = mean_high_PGgS, `Low Score N` = N_low_PGgS, `Low Score Mean` = mean_low_PGgS, `Test Statistics` = t_statistic, `Degree of Freedom` = df, `Adjusted P-Value` = p_adjusted_FDR) 
+}
+
+# ==============================================================================
+# 7. EXPORT ALL RESULTS TO EXCEL
+# ==============================================================================
+results_list <- list(
+  "B1_Sensitivity" = table_B1_Sensitivity, "B2_Whole_Sample" = whole_sample_desc, "B2_Female" = female_desc, "B2_Male" = male_desc, "B2_MZ" = mz_desc, "B2_DZ" = dz_desc, "B2_High_PGgS" = high_pgiq_desc, "B2_Low_PGgS" = low_pgiq_desc, "B10_High_vs_Low_PGS" = table_B10_HighLow
+)
+write.xlsx(results_list, file = paste0(outFileStem, "ManuscriptTables_B1_B2_B10.xlsx"), colNames = TRUE, borders = "columns")  # -- Cognitive Composites --
   c("g_CTCR", "Cross Time", "CrossAgeDummy", "Cross Rater", "General Cognitive Ability (g)"),
   c("vb_CTCR", "Cross Time", "CrossAgeDummy", "Cross Rater", "Verbal Ability"),
   c("nv_CTCR", "Cross Time", "CrossAgeDummy", "Cross Rater", "Nonverbal Ability"),

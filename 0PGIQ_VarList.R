@@ -1,7 +1,3 @@
-# VarList
-# Yujing Lin
-# 29 August, 2025
-
 # g, verbal g, and nonverbal g ####
 G_Composites_Varlist <- list(
   # -- g --
@@ -128,7 +124,6 @@ Nonverbal_Tests_Varlist <- list(
   c("lhstota", "Hidden Shapes (12 yr)", "lcqage1", "Child", "Childhood Nonverbal Abilities"),
   c("ljgtota", "Jigsaws (12 yr)", "lcqage1", "Child", "Childhood Nonverbal Abilities"),
   c("lmatota", "NFER Maths (12 yr)", "lcqage1", "Child", "Childhood Nonverbal Abilities"),
-  # the NFER maths above was comprised of the 3 subtests below
   c("lma1tot", "Maths: Understanding Numbers (12 yr)", "lcqage1", "Child", "Childhood Nonverbal Abilities"),
   c("lma2tot", "Maths: Non-Numerical Processes (12 yr)", "lcqage1", "Child", "Childhood Nonverbal Abilities"),
   c("lma3tot", "Maths: Computation & Knowledge (12 yr)", "lcqage1", "Child", "Childhood Nonverbal Abilities"),
@@ -160,7 +155,7 @@ Edu_Achieve_Attain_Varlist <- list(
   c("iteng", "9 yr", "itage1", "Teacher", "English Achievement"),
   c("jteng", "10 yr", "jtqage1", "Teacher", "English Achievement"),
   c("lteng", "12 yr", "ltqage1", "Teacher", "English Achievement"),
-  c("pcexgcseenggrdm", "16 yr", "pcwebage1", "Child", "English Achievement"),
+  c("pcexgcseenggrdm", "16 yr", "pcexgcseage1", "Child", "English Achievement"),
   c("rcqalsenggrdm", "18 yr", "rcqalage1", "Child", "English Achievement"),
   
   # -- Maths --
@@ -168,14 +163,14 @@ Edu_Achieve_Attain_Varlist <- list(
   c("itmat", "9 yr", "itage1", "Teacher", "Maths Achievement"),
   c("jtmat", "10 yr", "jtqage1", "Teacher", "Maths Achievement"),
   c("ltmat", "12 yr", "ltqage1", "Teacher", "Maths Achievement"),
-  c("pcexgcsematgrdm", "16 yr", "pcwebage1", "Child", "Maths Achievement"),
+  c("pcexgcsematgrdm", "16 yr", "pcexgcseage1", "Child", "Maths Achievement"),
   c("rcqalsmatgrdm", "18 yr", "rcqalage1", "Child", "Maths Achievement"),
   
   # -- Science --
   c("itsci", "9 yr", "itage1", "Teacher", "Science Achievement"),
   c("jtsci", "10 yr", "jtqage1", "Teacher", "Science Achievement"),
   c("ltsci", "12 yr", "ltqage1", "Teacher", "Science Achievement"),
-  c("pcexgcsescigrdm", "16 yr", "pcwebage1", "Child", "Science Achievement"),
+  c("pcexgcsescigrdm", "16 yr", "pcexgcseage1", "Child", "Science Achievement"),
   c("rcqalsscigrdm", "18 yr", "rcqalage1", "Child", "Science Achievement"),
   
   # -- Core-Subject Composite --
@@ -184,7 +179,7 @@ Edu_Achieve_Attain_Varlist <- list(
   c("jt3ac", "10 yr", "jtqage1", "Teacher", "Core-Subject Achievement"),
   c("lt3ac", "12 yr", "ltqage1", "Teacher", "Core-Subject Achievement"),
   c("npks3t3a", "14 yr", "ncqage1", "Parent", "Core-Subject Achievement"), 
-  c("pcexgcsecoregrdm", "16 yr", "pcwebage1", "Child", "Core-Subject Achievement"),
+  c("pcexgcsecoregrdm", "16 yr", "pcexgcseage1", "Child", "Core-Subject Achievement"),
   c("rcqalsgrdm", "18 yr", "rcqalage1", "Child", "Core-Subject Achievement"),
   c("u1cedat", "21 yr", "u1cage1", "Child", "Core-Subject Achievement"),
   
@@ -232,14 +227,15 @@ Anxiety_Varlist <- list(
   c("ipanxncogt", "9 yr", "icpage", "Parent", "ARBQ Negative Cognition"),
   c("ppbhanxncogt", "16 yr", "pcbhage1", "Parent", "ARBQ Negative Cognition"),
   c("gtanxncogt", "7 yr", "gpbage", "Teacher", "ARBQ Negative Cognition"),
-  
+
   # -- Total Anxiety Symptoms --
   c("canxt", "3 yr", "cpbage", "Parent", "ARBQ Total Anxiety"),
   c("danxt", "4 yr", "dpbage", "Parent", "ARBQ Total Anxiety"),
   c("gpanxt", "7 yr", "gpbage", "Parent", "ARBQ Total Anxiety"),
   c("ipanxt", "9 yr", "icpage", "Parent", "ARBQ Total Anxiety"),
   c("ppbhanxt", "16 yr", "pcbhage1", "Parent", "ARBQ Total Anxiety"),
-  c("gtanxt", "7 yr", "gpbage", "Teacher", "ARBQ Total Anxiety"))
+  c("gtanxt", "7 yr", "gpbage", "Teacher", "ARBQ Total Anxiety")
+)
 
 # Conner's ADHD list ####
 Conners_Varlist <- list(
@@ -264,15 +260,18 @@ Conners_Varlist <- list(
   c("ncconhit", "14 yr", "ncqage1", "Child", "Hyper-Impuls"),
   c("u2cconnhypt", "21 yr", "u1cage1", "Child", "Hyper-Impuls"),
   
+  # -- Emotional Lability --
+  # c("ppbhconnemlt", "16 yr", "pcbhage1", "Parent", "Emotional Lability"),
+  
   # -- Total Score --
-  c("hconnt", "8 yr", "hage", "Parent", "ADHD"),
-  c("lpconnt", "12 yr", "lcqage1", "Parent", "ADHD"),
-  c("npconnt", "14 yr", "ncqage1", "Parent", "ADHD"),
-  c("ppbhconnt", "16 yr", "pcbhage1", "Parent", "ADHD"),
-  c("u1pcont", "21 yr", "u1cage1", "Parent", "ADHD"),
-  c("ntconnt", "14 yr", "ncqage1", "Teacher", "ADHD"),
-  c("ncconnt", "14 yr", "ncqage1", "Child", "ADHD"),
-  c("u2cconnt", "21 yr", "u1cage1", "Child", "ADHD")
+  c("hconnt", "8 yr", "hage", "Parent", "ADHD Total"),
+  c("lpconnt", "12 yr", "lcqage1", "Parent", "ADHD Total"),
+  c("npconnt", "14 yr", "ncqage1", "Parent", "ADHD Total"),
+  c("ppbhconnt", "16 yr", "pcbhage1", "Parent", "ADHD Total"),
+  c("u1pcont", "21 yr", "u1cage1", "Parent", "ADHD Total"),
+  c("ntconnt", "14 yr", "ncqage1", "Teacher", "ADHD Total"),
+  c("ncconnt", "14 yr", "ncqage1", "Child", "ADHD Total"),
+  c("u2cconnt", "21 yr", "u1cage1", "Child", "ADHD Total")
 )
 
 # SDQ list ####
@@ -285,6 +284,7 @@ SDQ_Varlist <- list(
   c("ipsdqcont", "9 yr", "icpage", "Parent", "Conduct"),
   c("lpsdqcont", "12 yr", "lcqage1", "Parent", "Conduct"),
   c("ppbhsdqcont", "16 yr", "pcbhage1", "Parent", "Conduct"),
+  #c("ppl2sdqcont", "16 yr", "pcbhage1", "Parent", "Conduct"),
   c("u1psdqcont", "21 yr", "u1cage1", "Parent", "Conduct"),
   c("gtsdqcont", "7 yr", "gpbage", "Teacher", "Conduct"),
   c("itsdqcont", "9 yr", "itage1", "Teacher", "Conduct"),
@@ -400,10 +400,10 @@ Anthro_Varlist <- list(
 )
 
 # Other outcomes ####
-Wellbeing_Varlist <- list(
+Wellbeing_Varlist <- list( 
   # -- Educational Achievements --
-  c("pcexgcsehumgrdm", "GCSE Humanities", "pcwebage1", "Child", "GCSE"),
-  c("pcexgcselangrdm", "GCSE Language", "pcwebage1", "Child", "GCSE"),
+  c("pcexgcsehumgrdm", "GCSE Humanities", "pcexgcseage1", "Child", "GCSE"),
+  c("pcexgcselangrdm", "GCSE Language", "pcexgcseage1", "Child", "GCSE"),
   c("rcqalstecgrdm", "AL Technology", "rcqalage1", "Child", "A/AS-Level"),
   c("rcqalshumgrdm", "AL Humanities", "rcqalage1", "Child", "A/AS-Level"),
   c("rcqalslangrdm", "AL Language", "rcqalage1", "Child", "A/AS-Level"),
@@ -524,11 +524,11 @@ Anxiety_Varlist_oneRater <- list(
   c("ppbhanxncogt", "16 yr", "pcbhage1", "Parent", "Negative Cognition"),
   
   # -- Total Anxiety Symptoms --
-  c("canxt", "3 yr", "cpbage", "Parent", "Anxiety"),
-  c("danxt", "4 yr", "dpbage", "Parent", "Anxiety"),
-  c("gpanxt", "7 yr", "gpbage", "Parent", "Anxiety"),
-  c("ipanxt", "9 yr", "icpage", "Parent", "Anxiety"),
-  c("ppbhanxt", "16 yr", "pcbhage1", "Parent", "Anxiety")
+  c("canxt", "3 yr", "cpbage", "Parent", "Anxiety Total"),
+  c("danxt", "4 yr", "dpbage", "Parent", "Anxiety Total"),
+  c("gpanxt", "7 yr", "gpbage", "Parent", "Anxiety Total"),
+  c("ipanxt", "9 yr", "icpage", "Parent", "Anxiety Total"),
+  c("ppbhanxt", "16 yr", "pcbhage1", "Parent", "Anxiety Total")
 )
 
 # Conner's ADHD list--one rater ####
@@ -549,11 +549,11 @@ Conners_Varlist_oneRater <- list(
   c("u2cconnhypt", "21 yr", "u1cage1", "Child", "Hyper-Impuls"),
   
   # -- ADHD Score --
-  c("hconnt", "8 yr", "hage", "Parent", "ADHD"),
-  c("lpconnt", "12 yr", "lcqage1", "Parent", "ADHD"),
-  c("npconnt", "14 yr", "ncqage1", "Parent", "ADHD"),
-  c("ppbhconnt", "16 yr", "pcbhage1", "Parent", "ADHD"),
-  c("u2cconnt", "21 yr", "u1cage1", "Child", "ADHD")
+  c("hconnt", "8 yr", "hage", "Parent", "ADHD Total"),
+  c("lpconnt", "12 yr", "lcqage1", "Parent", "ADHD Total"),
+  c("npconnt", "14 yr", "ncqage1", "Parent", "ADHD Total"),
+  c("ppbhconnt", "16 yr", "pcbhage1", "Parent", "ADHD Total"),
+  c("u2cconnt", "21 yr", "u1cage1", "Child", "ADHD Total")
 )
 
 # SDQ list--one rater ####
@@ -635,4 +635,3 @@ list_names <- ls(pattern = "_Varlist_oneRater$")
 print(list_names)
 
 cat("All Varlist Loaded \n\n")
-
